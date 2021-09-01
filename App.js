@@ -1,10 +1,67 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React,{useEffect,useState} from 'react';
 import { TouchableHighlight } from 'react-native';
 import { ImageBackground, StyleSheet, Text, View, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera } from 'expo-camera';
+
+
 
 
 export default function App() {
+  const [image, setImage] = useState(null);
+  const [hasPermission, setHasPermission] = useState(null);
+  const [type, setType] = useState(Camera.Constants.Type.back);
+  
+
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          alert('Sorry, we need camera roll permissions to make this work!');
+        }
+      }
+    })();
+  }, []);
+
+
+ const openCamera = async () => {
+  const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+  if (permissionResult.granted === false) {
+    alert("You've refused to allow this appp to access your camera!");
+    return;
+  }
+
+  const result = await ImagePicker.launchCameraAsync();
+
+  // Explore the result
+  console.log(result);
+
+  if (!result.cancelled) {
+    setPickedImagePath(result.uri);
+    console.log(result.uri);
+  }
+}
+
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.cancelled) {
+      setImage(result.uri);
+    }
+  };
+
+
   return (
       <View style={styles.container}>
        <ImageBackground source={require("./assets/background.png")} resizeMode="cover" style={styles.image}>
@@ -13,12 +70,12 @@ export default function App() {
       <Text style={styles.text2}>Flight-Helper는 여러분의 원활한 여행을 위해 기내 </Text>
       <Text style={styles.text2}>반입 금지 물품 선별을 도와드리는 서비스 입니다. </Text>
       <Text style={styles.text2}>Flight-Helper와 함께 꼼꼼한 여행 준비를 해보세요! </Text>
-      <TouchableHighlight>
+      <TouchableHighlight onPress={openCamera}>
         <View style={styles.btncontainer}>
           <Text style={styles.btntext}>사진 촬영하기</Text>
         </View>
       </TouchableHighlight>
-      <TouchableHighlight>
+      <TouchableHighlight onPress={pickImage}>
         <View style={styles.btncontainer2}>
           <Text style={styles.btntext2}>갤러리에서 사진 불러오기</Text>
         </View>
